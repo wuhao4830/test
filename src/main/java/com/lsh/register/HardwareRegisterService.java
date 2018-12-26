@@ -3,6 +3,7 @@ package com.lsh.register;
 import com.lsh.control.CentralControllerService;
 import com.lsh.data.HardWareData;
 import com.lsh.data.SocketMessageData;
+import com.lsh.enums.HardWareType;
 import com.lsh.enums.OperatorType;
 import com.lsh.enums.ServiceOperatorType;
 import com.lsh.enums.SocketType;
@@ -13,6 +14,7 @@ import com.lsh.strategy.BaseStrategy;
 import com.lsh.utils.ClassUtils;
 import com.lsh.utils.IdGenerator;
 import com.lsh.utils.PropsUtils;
+import org.apache.commons.beanutils.MappedPropertyDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.text.DateFormat;
@@ -63,6 +65,9 @@ public class HardwareRegisterService {
             //将网关地址，Ip，端口全部上报给服务器
             hardwareInfo.put("macId", hardware.getMacId());
             hardwareInfo.put("deviceType",hardware.getType());
+            if (hardware.getType().compareTo(HardWareType.SETTLEMENT.getValue())==0){
+                return;
+            }
             hardwareInfo.put("cmd",ServiceOperatorType.REGISTER.getValue());
             try {
                 centralControllerService.sendMessage(messageId,hardwareInfo, SocketType.CLIENT_REQUEST.getValue());
@@ -79,7 +84,9 @@ public class HardwareRegisterService {
     public void init() {
         try {
             List<Class> classes = ClassUtils.getAllClassByInterface(BaseStrategy.class);
+
             for(Class baseClass : classes){
+                logger.info("-----"+baseClass.getName());
                 BaseStrategy baseStrategy = (BaseStrategy)baseClass.newInstance();
                 this.executor.submit(new LogTask(this, baseStrategy));
             }
@@ -105,6 +112,7 @@ public class HardwareRegisterService {
 
                 List<HardWareBaseService> baseServices = baseStrategy.getHardWare();
                 for (HardWareBaseService baseService : baseServices) {
+                    logger.info("++++++++"+baseService.getClass().getName());
                     hardwareRegisterService.register(baseService);
                 }
             }catch (Exception e){

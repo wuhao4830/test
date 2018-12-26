@@ -1,7 +1,6 @@
 package com.lsh.schedule.impl;
 
-import com.lsh.monitor.HardwareMonitorService;
-import com.lsh.register.HardwareRegisterService;
+import com.lsh.control.CentralControllerService;
 import com.lsh.schedule.BaseSchedule;
 import com.lsh.utils.PropsUtils;
 import org.slf4j.Logger;
@@ -13,23 +12,23 @@ import java.util.TimerTask;
 /**
  * Created by wuhao on 2018/6/4.
  */
-public class MonitorSchedule implements BaseSchedule{
+public class MessageSchedule implements BaseSchedule{
 
-    private static final Logger logger = LoggerFactory.getLogger(MonitorSchedule.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessageSchedule.class);
 
     public void start() throws Exception {
+        Timer timer = new Timer();
         try {
 
-            final Long refreshCapacity = Long.valueOf(PropsUtils.get("client.monitor.refreshCapacity"));
-            Timer timer = new Timer();
-            logger.info("start monitor timer refreshCapacity:" + refreshCapacity);
+            final Long refreshCapacity = Long.valueOf(PropsUtils.get("client.message.refreshCapacity"));
+            logger.info("start message timer refreshCapacity:" + refreshCapacity);
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     try {
-                        logger.info("run hardwareMonitorService");
-                        HardwareMonitorService hardwareMonitorService = HardwareMonitorService.getInstance();
-                        hardwareMonitorService.getHardWareStatus();
+                        CentralControllerService centralControllerService = CentralControllerService.getInstance();
+                        centralControllerService.getMessage();
+
                     } catch (Throwable throwable) {
                         logger.error(throwable.getMessage(), throwable);
                     }

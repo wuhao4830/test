@@ -5,9 +5,12 @@ package com.lsh.enums;
  */
 public enum HardWareType {
 
-    DOOR(1);
+    //门
+    DOOR("1"),
+    //结算台（网关）
+    SETTLEMENT("2");
 
-    HardWareType(int value) {
+    HardWareType(String value) {
         this.value = value;
     }
 
@@ -18,13 +21,13 @@ public enum HardWareType {
                 '}';
     }
 
-    public int getValue() {
+    public String getValue() {
         return value;
     }
 
-    public void setValue(int value) {
+    public void setValue(String value) {
         this.value = value;
     }
 
-    private int value;
+    private String value;
 }

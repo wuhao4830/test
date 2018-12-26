@@ -1,8 +1,5 @@
 package com.lsh.data;
 
-import com.lsh.hardwareService.HardWareBaseService;
-import com.lsh.model.SocketMessage;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,10 +8,10 @@ import java.util.Map;
  */
 public class ServiceData {
     //硬件注册数据(需要注册硬件的获取服务)
-    private static Map<Integer,Class> service2ClassMap = new HashMap<Integer, Class>();
+    private static Map<String,Class> service2ClassMap = new HashMap<String, Class>();
 
 
-    public static boolean register(int type,Class service) {
+    public static boolean register(String type,Class service) {
         synchronized (service2ClassMap) {
             if (!service2ClassMap.containsKey(type)) {
                 //没有存储过（1.放入到本地注册库中）
@@ -25,7 +22,7 @@ public class ServiceData {
         return false;
     }
 
-    public static Class getClassByType(int hardWareType) {
+    public static Class getClassByType(String hardWareType) {
         synchronized (service2ClassMap) {
             if (service2ClassMap.containsKey(hardWareType)) {
                 //注册过

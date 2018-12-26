@@ -2,13 +2,15 @@ package com.lsh.utils;
 
 import com.lsh.model.NsHead;
 import com.lsh.model.SocketBean;
-import net.sf.json.JSONObject;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
 
 /**
  * Created by wuhao on 2018/5/31.
@@ -63,7 +65,7 @@ public class NsHeadClient {
        initClient();
     }
 
-    public void jsonCall(String jsonInput) throws Exception{
+    public synchronized void jsonCall(String jsonInput) throws Exception{
         logger.info("send jsonInput:"+jsonInput);
         NsHead writeHead = new NsHead();
         OutputStream outputStream = null;
@@ -72,8 +74,9 @@ public class NsHeadClient {
             writeHead.body_len = writeBytes.length + 4;
 
             outputStream = client.getOutputStream();
-            outputStream.write(writeHead.pack());
-            outputStream.write(writeBytes);
+            byte [] head = writeHead.pack();
+            byte [] byteOutPut = byteMerger(head,writeBytes);
+            outputStream.write(byteOutPut);
             outputStream.flush();
 
         }catch (Exception e){
@@ -85,20 +88,25 @@ public class NsHeadClient {
         InputStream reader = client.getInputStream();
 
         byte[] readHead = new byte[8];
+        logger.info("begin read");
         int result = reader.read(readHead);
+        logger.info("read end:"+result);
         if (result == -1) {
             return null;
         }
         NsHead head = new NsHead();
         head.unpack(readHead);
+        logger.info("read head:"+ head);
         byte[] readBytes = new byte[head.body_len];
         int offset = 0;
         int leftByteNum = head.body_len;
+        logger.info("read body begin:"+leftByteNum);
         while (leftByteNum > 0) {
             int len = reader.read(readBytes, offset, leftByteNum);
             leftByteNum -= len;
             offset += len;
         }
+        logger.info("read body end");
         String response =  new String(readBytes, "UTF-8");
         logger.info("read response:" + response);
         return response;
@@ -110,8 +118,10 @@ public class NsHeadClient {
                 return null;
             }
             logger.info("response value:" + response);
-            JSONObject jsonObject = JSONObject.fromObject(response);
-            SocketBean socketBean = (SocketBean) JSONObject.toBean(jsonObject, SocketBean.class);
+            JSONObject jsonObject = JSON.parseObject(response);
+            SocketBean socketBean = new SocketBean();
+            socketBean.setHead((Map)jsonObject.get("head"));
+            socketBean.setBody((Map) jsonObject.get("body"));
             return socketBean;
 
         }catch (Exception e){
@@ -120,4 +130,10 @@ public class NsHeadClient {
         }
     }
 
+    public static byte[] byteMerger(byte[] bt1, byte[] bt2){
+        byte[] bt3 = new byte[bt1.length+bt2.length];
+        System.arraycopy(bt1, 0, bt3, 0, bt1.length);
+        System.arraycopy(bt2, 0, bt3, bt1.length, bt2.length);
+        return bt3;
+    }
 }

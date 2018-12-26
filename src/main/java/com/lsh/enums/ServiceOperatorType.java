@@ -6,10 +6,10 @@ package com.lsh.enums;
 //type： 1.注册
 public enum ServiceOperatorType {
 
-    REGISTER(1),
-    DOOR_STATUS(2);
+    REGISTER("1"),
+    DOOR_STATUS("2");
 
-    ServiceOperatorType(int value) {
+    ServiceOperatorType(String value) {
         this.value = value;
     }
 
@@ -20,13 +20,13 @@ public enum ServiceOperatorType {
                 '}';
     }
 
-    public int getValue() {
+    public String getValue() {
         return value;
     }
 
-    public void setValue(int value) {
+    public void setValue(String value) {
         this.value = value;
     }
 
-    private int value;
+    private String value;
 }

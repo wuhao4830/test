@@ -1,10 +1,12 @@
 package com.lsh.model;
 
+import java.util.Map;
+
 /**
  * Created by wuhao on 2018/5/31.
  */
 public class Hardware {
-    public int type;
+    public String type;
     public String ip;
     public int port;
     public String macStrr;
@@ -33,11 +35,11 @@ public class Hardware {
         this.macStrr = macStrr;
     }
 
-    public int getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(int type) {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -47,6 +49,17 @@ public class Hardware {
 
     public void setMacId(String macId) {
         this.macId = macId;
+    }
+
+
+    public static Hardware map2Bean(Map ori) {
+        Hardware hardware = new Hardware();
+        hardware.setIp(ori.get("ip").toString());
+        hardware.setPort(Integer.valueOf(ori.get("port").toString()));
+        hardware.setType(ori.get("type").toString());
+        hardware.setMacId(ori.get("macId").toString());
+        hardware.setMacStrr(ori.get("macStrr").toString());
+        return hardware;
     }
 
     @Override

@@ -56,6 +56,14 @@ public class NsHead {
         };
     }
 
+    @Override
+    public String toString() {
+        return "NsHead{" +
+                "id=" + id +
+                ", body_len=" + body_len +
+                '}';
+    }
+
     public static void main(String args[]) {
         byte a[] = new byte[8];
         a[0]=0;

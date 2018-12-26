@@ -47,8 +47,8 @@ public class IdGenerator {
     }
 
     public String genId() {
-        //String id =  snowflake.next() + "";
-        String id =  "6413335619551891456";
+        String id =  snowflake.next() + "";
+        //String id =  "6413335619551891456";
         return id;
     }
     public Long genLongId() {
@@ -66,13 +66,6 @@ public class IdGenerator {
     }
 
     public String genMacId(String macStrr) {
-        synchronized (macStrr2macIdMap) {
-            if(!macStrr2macIdMap.containsKey(macStrr)) {
-                String macId =  genId();
-                macStrr2macIdMap.put(macStrr,macId);
-            }
-            return macStrr2macIdMap.get(macStrr);
-        }
+        return macStrr.replace(":","");
     }
-
 }

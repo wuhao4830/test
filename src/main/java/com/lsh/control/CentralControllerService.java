@@ -1,6 +1,7 @@
 package com.lsh.control;
 
 import com.alibaba.fastjson.JSON;
+import com.lsh.base.common.exception.BizCheckedException;
 import com.lsh.base.common.utils.BeanMapTransUtils;
 import com.lsh.data.HardWareData;
 import com.lsh.data.SocketMessageData;
@@ -13,12 +14,10 @@ import com.lsh.model.SocketHead;
 import com.lsh.model.SocketMessage;
 import com.lsh.utils.JsonUtils;
 import com.lsh.utils.NsHeadClient;
-import net.sf.ezmorph.bean.MorphDynaBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by wuhao on 2018/6/5.
@@ -27,8 +26,6 @@ public class CentralControllerService {
 
 
     private static final Logger logger = LoggerFactory.getLogger(CentralControllerService.class);
-
-    private ReentrantLock lock = new ReentrantLock(true);
 
     private CentralControllerService () {
 
@@ -44,49 +41,51 @@ public class CentralControllerService {
         return CentralControllerServiceSingletonFactory.instance;
     }
 
-    public  void getMessage() throws Exception{
+    public  synchronized void getMessage() throws Exception{
         NsHeadClient  nsHeadClient= NsHeadClient.getInstance();
-        while (true) {
-            //server尝试接收其他Socket的连接请求，server的accept方法是阻塞式的
-            //跟客户端建立好连接之后，我们就可以获取socket的InputStream，并从中读取客户端发过来的信息了。
-            logger.info("run message listener");
-            Thread.sleep(1000);
-            try {
-                if(lock.tryLock()) {
-                    SocketBean socketBean = nsHeadClient.getSocketBean();
-                    if (socketBean == null) {
-                        continue;
-                    }
-                    //这个根据type来取是否是返回结果
-                    SocketHead head = BeanMapTransUtils.map2Bean(socketBean.getHead(), SocketHead.class);
-                    if (head.getType() == SocketType.SERVICE_RESPONSE.getValue()) {
-                        //是服务器返回的数据
-                        operatorReturnMessage(head, socketBean.getBody());
-                        continue;
-                    }
-
-                    //根据传过来的macId找到对应的服务
-                    //这个地方特殊处理cmdParams这个字段
-                    Map<String,Object> body = socketBean.getBody();
-
-                    OperatorBean operatorBean = BeanMapTransUtils.map2Bean(body, OperatorBean.class);
-                    HardWareBaseService hardWareBaseService = HardWareData.getMac2StrategyMap().get(operatorBean.getMacId());
-                    if (hardWareBaseService == null) {
-                        logger.error("have not service to run ");
-                        continue;
-                    }
-                    Object result = hardWareBaseService.operator(operatorBean.getCmd(), operatorBean.getCmdParams());
-                    if (result != null) {
-                        //TODO 这个有一个风险点，如果发送失败了怎么办？
-                        this.sendMessage(head.getMessageId(),result,SocketType.CLIENT_RESPONSE.getValue());
-                    }
-                }
-
-            }catch (Exception e){
-                logger.error(e.getMessage(),e);
-            }finally {
-                lock.unlock();
+        //server尝试接收其他Socket的连接请求，server的accept方法是阻塞式的
+        //跟客户端建立好连接之后，我们就可以获取socket的InputStream，并从中读取客户端发过来的信息了。
+        logger.info("run message listener");
+        //Thread.sleep(1000);
+        try {
+            SocketBean socketBean = nsHeadClient.getSocketBean();
+            if (socketBean == null) {
+                    return;
             }
+            //这个根据type来取是否是返回结果
+            logger.info("get socket begin end");
+            SocketHead head = BeanMapTransUtils.map2Bean(socketBean.getHead(), SocketHead.class);
+            if (head.getType() == SocketType.SERVICE_RESPONSE.getValue()) {
+                //是服务器返回的数据
+                logger.info("run return data begin");
+                operatorReturnMessage(head, socketBean.getBody());
+                logger.info("run return data end");
+                    return;
+            }
+
+            //根据传过来的macId找到对应的服务
+            //这个地方特殊处理cmdParams这个字段
+            Map<String,Object> body = socketBean.getBody();
+
+            OperatorBean operatorBean = BeanMapTransUtils.map2Bean(body, OperatorBean.class);
+            HardWareBaseService hardWareBaseService = HardWareData.getMac2StrategyMap().get(operatorBean.getMacId());
+            if (hardWareBaseService == null) {
+                logger.error("have not service to run ");
+                this.sendErrorMessage(head.getMessageId(), SocketType.CLIENT_RESPONSE.getValue(), "无该类型设备");
+                return;
+            }
+            try {
+                Object result = hardWareBaseService.operator(operatorBean.getCmd(), operatorBean.getCmdParams());
+                if (result != null) {
+                    //TODO 这个有一个风险点，如果发送失败了怎么办？
+                    this.sendMessage(head.getMessageId(),result,SocketType.CLIENT_RESPONSE.getValue());
+                }
+            }catch (Exception e){
+                this.sendErrorMessage(head.getMessageId(),SocketType.CLIENT_RESPONSE.getValue(),e.getMessage());
+            }
+
+        }catch (Exception e){
+            logger.error(e.getMessage(),e);
         }
 
     }
@@ -98,6 +97,13 @@ public class CentralControllerService {
         NsHeadClient nsHeadClient = NsHeadClient.getInstance();
         nsHeadClient.jsonCall(JsonUtils.SUCCESS(message,type,messageId));
     }
+
+    public  void sendErrorMessage(String messageId,int type,String errStr) throws Exception{
+
+        NsHeadClient nsHeadClient = NsHeadClient.getInstance();
+        nsHeadClient.jsonCall(JsonUtils.TOKEN_ERROR(type,messageId,errStr));
+    }
+
 
     public  void operatorReturnMessage(SocketHead socketHead,Map body) throws Exception{
         logger.info("return message value:"+body);

@@ -17,16 +17,15 @@ public class SocketSchedule implements BaseSchedule{
     private static final Logger logger = LoggerFactory.getLogger(SocketSchedule.class);
 
     public void start() throws Exception {
+        Timer timer = new Timer();
         try {
 
             final Long refreshCapacity = Long.valueOf(PropsUtils.get("client.socket.refreshCapacity"));
-            Timer timer = new Timer();
             logger.info("start socket timer refreshCapacity:" + refreshCapacity);
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     try {
-                        logger.info("run SocketSchedule");
                         NsHeadClient nsHeadClient = NsHeadClient.getInstance();
                         nsHeadClient.checkSocketConn();
 

@@ -2,26 +2,23 @@ package com.lsh.utils;
 
 import com.lsh.base.common.json.JsonMapper;
 import com.lsh.base.common.utils.DateUtils;
-import com.lsh.model.SocketBean;
-import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
 import net.sf.json.processors.JsonValueProcessor;
 
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * Created by wuhao on 2018/6/5.
  */
-public class JsonUtils {
+public class ResultUtils {
     public static final Integer SUCCESS = Integer.valueOf(1);
     public static final Integer TOKEN_EXCEPTION = Integer.valueOf(5);
     private static JsonMapper jsonMapper = new JsonMapper();
-    private static String gatewayId = PropsUtils.get("gatewayId");
-    //private static String shopId = PropsUtils.get("shopId");
-    private static String gatewayName = PropsUtils.get("gatewayName");
 
-    public JsonUtils() {
+
+    public ResultUtils() {
     }
 
     public static JsonMapper getJsonMapper() {
@@ -40,64 +37,59 @@ public class JsonUtils {
         return jsonMapper.formatJson(json);
     }
 
-    public static String SUCCESS(String messageId,int type) {
-        LinkedHashMap head = new LinkedHashMap();
-        head.put("status", SUCCESS);
-        head.put("type",type);
-        head.put("gatewayId", gatewayId);
-        //head.put("shopId", shopId);
-        //head.put("shopName", gatewayName);
-        head.put("message", "success.");
-        head.put("messageId",messageId);
-        head.put("timestamp", DateUtils.getCurrentSeconds());
+    public static String SUCCESS(String messageId,String uid) {
         LinkedHashMap map = new LinkedHashMap();
-        map.put("head", head);
+        map.put("status", SUCCESS);
+        map.put("uid",uid);
+        map.put("message", "success.");
+        map.put("messageId",messageId);
+        map.put("timestamp", DateUtils.getCurrentSeconds());
         map.put("body", new HashMap<String,Object>());
         return obj2Json(map);
     }
 
-    public static String SUCCESS(Object message,int type,String messageId) {
-        LinkedHashMap head = new LinkedHashMap();
-        head.put("status", SUCCESS);
-        head.put("gatewayId", gatewayId);
-        //head.put("shopId", shopId);
-        //head.put("shopName", gatewayName);
-        head.put("message", "success.");
-        head.put("type",type);
-        head.put("messageId", messageId);
-        head.put("timestamp",  DateUtils.getCurrentSeconds());
+    public static String SUCCESS(Object message,String uid,String messageId) {
         LinkedHashMap map = new LinkedHashMap();
-        map.put("head", head);
+        map.put("status", SUCCESS);
+        map.put("message", "success.");
+        map.put("uid",uid);
+        map.put("messageId", messageId);
+        map.put("timestamp", DateUtils.getCurrentSeconds());
+        map.put("body", message);
+        return obj2Json(map);
+    }
+
+    public static String SUCCESS(Object message,String uid,String messageId,String relationId) {
+        LinkedHashMap map = new LinkedHashMap();
+        map.put("status", SUCCESS);
+        map.put("message", "success.");
+        map.put("uid",uid);
+        map.put("relationId",relationId);
+        map.put("messageId", messageId);
+        map.put("timestamp", DateUtils.getCurrentSeconds());
         map.put("body", message);
         return obj2Json(map);
     }
 
 
 
-    public static String TOKEN_ERROR(int type,String messageId) {
-        LinkedHashMap head = new LinkedHashMap();
-        head.put("status", TOKEN_EXCEPTION);
-        head.put("messageId", messageId);
-        //head.put("shopName", gatewayName);
-        //head.put("shopId", shopId);
-        head.put("gatewayId", gatewayId);
-        head.put("type", type);
-        head.put("message", "system exception.");
-        head.put("timestamp",  DateUtils.getCurrentSeconds());
+
+    public static String TOKEN_ERROR(String uid,String messageId) {
         LinkedHashMap map = new LinkedHashMap();
-        map.put("head", head);
+        map.put("status", TOKEN_EXCEPTION);
+        map.put("messageId", messageId);
+        map.put("uid", uid);
+        map.put("message", "system exception.");
+        map.put("timestamp",  DateUtils.getCurrentSeconds());
         map.put("body", new HashMap<String,Object>());
         return obj2Json(map);
     }
 
-    public static String TOKEN_ERROR(int type,String messageId,Object errStr) {
+    public static String TOKEN_ERROR(String uid,String messageId,Object errStr) {
         LinkedHashMap head = new LinkedHashMap();
         head.put("status", TOKEN_EXCEPTION);
         head.put("messageId", messageId);
-        head.put("gatewayId", gatewayId);
-       // head.put("shopName", gatewayName);
-        //head.put("shopId", shopId);
-        head.put("type", type);
+        head.put("uid", uid);
         head.put("message", errStr);
         head.put("timestamp",  DateUtils.getCurrentSeconds());
         LinkedHashMap map = new LinkedHashMap();
